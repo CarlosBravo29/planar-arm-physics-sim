@@ -10,3 +10,7 @@ CMakeCache.txt
 
 # Executables
 *.exe
+
+#docs
+math.md
+*.docx

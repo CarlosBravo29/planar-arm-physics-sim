@@ -2,12 +2,13 @@
 
 ![Project Status: In Development](https://img.shields.io/badge/STATUS-WIP-blue)
 
-
-
-
 ## Direct Kinematic Model
 
-$$T^0_3=\begin{bmatrix} \cos(\theta_1+\theta_2+\theta_3) & -\sin(\theta_1+\theta_2+\theta_3) & 0 & a_1\cos(\theta_1)+a_2\cos(\theta_1+\theta_2)+a_3\cos(\theta_1+\theta_2+\theta_3) \\ \sin(\theta_1+\theta_2+\theta_3) & \cos(\theta_1+\theta_2+\theta_3) & 0 & a_1\sin(\theta_1)+a_2\sin(\theta_1+\theta_2)+a_3\sin(\theta_1+\theta_2+\theta_3) \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}$$
+| | $\theta_i$ | $d_i$ | $a_i$ | $\alpha_i$ |
+| --- | --- | --- | --- | --- |
+| 1 | $\theta_1$ | 0 | $a_1$ | 0 |
+| 2 | $\theta_2$ | 0 | $a_2$ | 0 |
+| 3 | $\theta_3$ | 0 | $a_3$ | 0 |
 
 $x = a_1\cos(\theta_1)+a_2\cos(\theta_1+\theta_2)+a_3\cos(\theta_1+\theta_2+\theta_3)$
 
