@@ -1,16 +1,13 @@
 # Python
 .venv/
+venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
-# CMake
-build/
-CMakeFiles/
-CMakeCache.txt
+# VS Code
+.vscode/
 
-# Executables
-*.exe
-
-#docs
-math.md
+# Docs
 *.docx
+math.md
