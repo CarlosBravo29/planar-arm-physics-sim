@@ -17,5 +17,4 @@ $y = a_1\sin(\theta_1)+a_2\sin(\theta_1+\theta_2)+a_3\sin(\theta_1+\theta_2+\the
 
 ## Tech Stack
 
-![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)

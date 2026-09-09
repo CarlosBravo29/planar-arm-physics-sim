@@ -1,24 +1,40 @@
-from math import (cos, sin, radians)
+import sys
+import tkinter as tk
+import kinematics as kin
 
-def calc_pos(l1, l2, l3, a1, a2, a3):
-    a1 = radians(a1)
-    a2 = radians(a2)
-    a3 = radians(a3)
+root = tk.Tk()
 
-    x = (l1*cos(a1)) + (l2*cos(a1+a2)) + (l3*cos(a1+a2+a3))
-    y = (l1*sin(a1)) + (l2*sin(a1+a2)) + (l3*sin(a1+a2+a3))
-    
-    return f"Cor: {(x, y)}"
+root.title("TEST sim")
+root.geometry("900x600")
 
-def get_data():
-    l1 = int(input("L1: "))
-    l2 = int(input("L2: "))
-    l3 = int(input("L3: "))
-    a1 = int(input("Angle 1: "))
-    a2 = int(input("Angle 2: "))
-    a3 = int(input("Angle 3: "))
 
-    return l1, l2, l3, a1, a2, a3
+def print_ans():
+    l1 = entry_1.get()
+    l2 = entry_2.get()
+    l3 = entry_3.get()
+    print(l1, l2, l3)
 
-l1, l2, l3, a1, a2, a3 = get_data()
-print(calc_pos(l1, l2, l3, a1, a2, a3))
+
+canvas = tk.Canvas(root, width=650, height=550, bg="white")
+canvas.pack(side="left", padx=10, pady=10)
+#canvas.create_oval(95, 95, 105, 105, fill="blue")
+
+controls = tk.Frame(root)
+controls.pack(side="right", padx=50)
+
+label_1 = tk.Label(controls, text="L1: ").grid(row=0, column=0)
+entry_1 = tk.Entry(controls)
+entry_1.grid(row=0, column=1)
+
+label_2 = tk.Label(controls, text="L2: ").grid(row=1, column=0)
+entry_2 = tk.Entry(controls)
+entry_2.grid(row=1, column=1)
+
+label_3 = tk.Label(controls, text="L2: ").grid(row=2, column=0)
+entry_3 = tk.Entry(controls)
+entry_3.grid(row=2, column=1)
+
+button = tk.Button(controls, text="Show ans", command=print_ans)
+button.grid(row=4, column=0)
+
+root.mainloop()
