@@ -11,3 +11,6 @@ __pycache__/
 # Docs
 *.docx
 math.md
+
+#
+test.py
