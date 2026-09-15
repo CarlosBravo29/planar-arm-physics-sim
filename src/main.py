@@ -1,6 +1,6 @@
 import sys
 import tkinter as tk
-import kinematics as kin
+from physics import kinematics as kin
 from ui.main_window import MainWin as mw
 
 

@@ -1,6 +1,7 @@
 import tkinter as tk
 import ui.widgets as widgets
-import kinematics as kin
+from physics import kinematics as kin
+from ui.robot import robot as rob
 
 class MainWin:
     def __init__(self, root):
@@ -16,6 +17,30 @@ class MainWin:
         self.canvas.pack(side="left", padx=10, pady=10)
         self.controls = tk.Frame(self.root)
         self.controls.pack(side="right", padx=50, expand=True)
+        self.create_rob()
+
+    def create_rob(self):
+        self.my_robot = rob(self.canvas)
+        self.my_robot.draw()
+
+    def draw_grid():
+        pass
+        
+    def draw_arm(self):
+        cv_width, cv_height = 600, 550
+        radius = 10
+        self.base_x, self.base_y = cv_width / 2, cv_height - radius - 15
+
+        x0, y0 = self.base_x, self.base_y
+        #x1, y1 = 
+        self.canvas.create_oval(
+            self.base_x - radius,
+            self.base_y - radius,
+            self.base_x + radius,
+            self.base_y + radius,
+            fill="blue"
+        )
+        #self.canvas.create_line(x0, y0, x1, y1, width=8)
 
     def create_controls(self):
 
@@ -40,6 +65,9 @@ class MainWin:
         self.link3_lbe.grid(row=2, column=0, pady=5)
         self.entry_3 = tk.Entry(self.config_fields)
         self.entry_3.grid(row=2, column=1, pady=5)
+
+        self.set_button = tk.Button(self.config_fields, text="Set lenght", command=self.get_links_lenght)
+        self.set_button.grid(row=3, column=0, columnspan=2, pady=15)
         ## END - Config Links ##
         
         ## Input position ##
@@ -62,12 +90,12 @@ class MainWin:
 
         # Dark Mode Toggle button
         self.dark_mode_leb = tk.Label(self.config_fields, text="Dark mode:")
-        self.dark_mode_leb.grid(row=3, column=0, pady=15, sticky="e")
+        self.dark_mode_leb.grid(row=4, column=0, pady=15, sticky="e")
         self.dark_mode_switch = widgets.ToggleSwitch(self.config_fields, width=50, height=25, command=self.on_switch_change)
-        self.dark_mode_switch.grid(row=3, column=1, pady=15, sticky="w")
+        self.dark_mode_switch.grid(row=4, column=1, pady=15, sticky="w")
 
         # Button Simulate
-        self.sim_button = tk.Button(self.input_fields, text="Show ans", command=self.print_ans)
+        self.sim_button = tk.Button(self.input_fields, text="Display", command=self.get_new_position)
         self.sim_button.grid(row=4, column=0, columnspan=2, pady=15)
 
     def on_switch_change(self, state):
@@ -117,9 +145,19 @@ class MainWin:
         self.sim_button.config(bg=bg_entry, fg=fg_text)
         self.dark_mode_switch.config(bg=bg_main)
 
-    def print_ans(self):
-        l1 = self.entry_1.get()
-        l2 = self.entry_2.get()
-        l3 = self.entry_3.get()
+    def get_new_position(self):
+        x = self.x_entry_1.get()
+        y = self.y_entry_2.get()
+        phi = self.phi_entry_3.get()
+        self.new_position = (x, y, phi)
+        self.links_lenght = self.get_links_lenght()
+        #self.draw_arm()
+        
+        print(self.new_position, self.links_lenght)
 
-        print(l1, l2, l3)
+    def get_links_lenght(self):
+        l1 = float(self.entry_1.get())
+        l2 = float(self.entry_2.get())
+        l3 = float(self.entry_3.get())
+        self.my_robot.set_link_lengths(l1, l2, l3)
+        return (l1, l2, l3)
