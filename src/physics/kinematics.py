@@ -8,17 +8,30 @@ def calc_pos(l1, l2, l3, a1, a2, a3):
     x = (l1*cos(a1)) + (l2*cos(a1+a2)) + (l3*cos(a1+a2+a3))
     y = (l1*sin(a1)) + (l2*sin(a1+a2)) + (l3*sin(a1+a2+a3))
     
-    return f"Cor: {(x, y)}"
+    return x, y
 
 def inv_kinematics(l1, l2, l3, phi_angle, x, y):
-    xw, yw = x-(l3*cos(phi_angle)), y-(l3*sin(phi_angle))
-    a = ((xw**2)+(yw**2)-(l1**2)-(l2**2)) / (2*l1*l2)
-    th2A = atan2(a, sqrt(1+a**2))
-    th2B = atan2(a, sqrt(1-a**2))
-    th1 = atan2(yw, xw)-atan2(l2*sin(th2A), l1+l2*cos(th2A))
-    th3 = th1 + th2A - phi_angle
+    phi = radians(phi_angle)
+    xw, yw = x - (l3 * cos(phi)), y - (l3 * sin(phi)) # Wrist position
+    a = ((xw**2) + (yw**2) - (l1**2) - (l2**2)) / (2 * l1 * l2)
+    if a < -1 or a > 1:
+        raise ValueError("Target position is outside the robot workspace.")
+    s2 = sqrt(1 - a**2)
+    theta2 = atan2(s2, a)
+    theta1 = atan2(yw, xw) - atan2(l2 * sin(theta2), l1 + l2 * cos(theta2))
+    theta3 = phi - theta1 - theta2
 
-    return (th1, th2A, th3)
+    return theta1, theta2, theta3
+
+def calc_joint_positions(l1, l2, l3, theta1, theta2, theta3):
+    x0, y0 = 0, 0
+    x1, y1 = l1 * cos(theta1), l1 * sin(theta1)
+    x2 = x1 + l2 * cos(theta1 + theta2)
+    y2 = y1 + l2 * sin(theta1 + theta2)
+    x3 = x2 + l3 * cos(theta1 + theta2 + theta3)
+    y3 = y2 + l3 * sin(theta1 + theta2 + theta3)
+
+    return ((x0, y0), (x1, y1), (x2, y2), (x3, y3))
 
 def get_data():
     l1 = int(input("L1: "))

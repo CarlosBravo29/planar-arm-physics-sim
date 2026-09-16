@@ -23,27 +23,7 @@ class MainWin:
         self.my_robot = rob(self.canvas)
         self.my_robot.draw()
 
-    def draw_grid():
-        pass
-        
-    def draw_arm(self):
-        cv_width, cv_height = 600, 550
-        radius = 10
-        self.base_x, self.base_y = cv_width / 2, cv_height - radius - 15
-
-        x0, y0 = self.base_x, self.base_y
-        #x1, y1 = 
-        self.canvas.create_oval(
-            self.base_x - radius,
-            self.base_y - radius,
-            self.base_x + radius,
-            self.base_y + radius,
-            fill="blue"
-        )
-        #self.canvas.create_line(x0, y0, x1, y1, width=8)
-
     def create_controls(self):
-
         self.config_fields = tk.Frame(self.controls, width=200, height=100)
         self.config_fields.pack(side="top", expand=True, pady=10)
         self.input_fields = tk.Frame(self.controls, width=200, height=100)
@@ -146,14 +126,17 @@ class MainWin:
         self.dark_mode_switch.config(bg=bg_main)
 
     def get_new_position(self):
-        x = self.x_entry_1.get()
-        y = self.y_entry_2.get()
-        phi = self.phi_entry_3.get()
-        self.new_position = (x, y, phi)
-        self.links_lenght = self.get_links_lenght()
-        #self.draw_arm()
-        
-        print(self.new_position, self.links_lenght)
+        x = float(self.x_entry_1.get())
+        y = float(self.y_entry_2.get())
+        phi = float(self.phi_entry_3.get())
+
+        l1 = self.my_robot.l1
+        l2 = self.my_robot.l2
+        l3 = self.my_robot.l3
+
+        theta1, theta2, theta3 = kin.inv_kinematics(l1, l2, l3, phi, x, y)
+        points = kin.calc_joint_positions(l1, l2, l3, theta1, theta2, theta3)
+        self.my_robot.set_position(points)
 
     def get_links_lenght(self):
         l1 = float(self.entry_1.get())
