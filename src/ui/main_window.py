@@ -2,6 +2,7 @@ import tkinter as tk
 import ui.widgets as widgets
 from physics import kinematics as kin
 from ui.robot import robot as rob
+from tkinter import ttk
 
 class MainWin:
     def __init__(self, root):
@@ -20,7 +21,7 @@ class MainWin:
         self.canvas = tk.Canvas(self.root, width=650, height=550, bg="white")
         self.canvas.pack(side="left", padx=10, pady=10)
         self.controls = tk.Frame(self.root)
-        self.controls.pack(side="right", padx=50, expand=True)
+        self.controls.pack(side="right", padx=50, pady=20, anchor="n")
         self.create_rob()
 
     def create_rob(self):
@@ -28,52 +29,78 @@ class MainWin:
         self.my_robot.draw()
 
     def create_controls(self):
-        self.config_frame = tk.Frame(self.controls, width=200, height=100)
-        self.config_frame.pack(side="top", expand=True, pady=10)
-        self.input_frame = tk.Frame(self.controls, width=200, height=100)
-        self.input_frame.pack(side="top", expand=True, pady=10)
+        self.notebook = ttk.Notebook(self.controls, width=350, height=550)
 
-        ## Config Links ##
-        config_fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
+        self.simulation_tab = tk.Frame(self.notebook)
+        self.robot_tab = tk.Frame(self.notebook)
+        self.dynamics_tab = tk.Frame(self.notebook)
+        self.settings_tab = tk.Frame(self.notebook)
 
-        config_label = tk.Label(self.config_frame, text="Config")
-        config_label.grid(row=0, column=0, columnspan=2, pady=15)     
+        self.notebook.add(self.simulation_tab, text="Simulation")
+        self.notebook.add(self.robot_tab, text="Robot")
+        self.notebook.add(self.dynamics_tab, text="Dynamics")
+        self.notebook.add(self.settings_tab, text="Settings")
+        self.notebook.pack(fill="both", expand=True)
 
-        for row, (text, key) in enumerate(config_fields, start=1):
-            label = tk.Label(self.config_frame, text=text)
+        self.create_simulation_tab()
+        self.create_robot_tab()
+        self.create_dynamics_tab()
+        self.create_settings_tab()
+
+    def create_simulation_tab(self):
+        fields = [("X:", "x"), ("Y:", "y"), ("Orientation:", "phi")]
+        title = tk.Label(self.simulation_tab, text="Target Position")
+        title.grid(row=0, column=0, columnspan=2, pady=15)
+
+        for row, (text, key) in enumerate(fields, start=1):
+            label = tk.Label(self.simulation_tab, text=text)
             label.grid(row=row, column=0, pady=5)
-            entry = tk.Entry(self.config_frame)
+            entry = tk.Entry(self.simulation_tab)
+            entry.grid(row=row, column=1, pady=5)
+            self.labels.append(label)
+            self.entries[key] = entry
+        sim_button_row = len(fields) + 1
+        self.sim_button = tk.Button(self.simulation_tab, text="Simulate", command=self.get_new_position)
+        self.sim_button.grid(row=sim_button_row, column=0, columnspan=2, pady=15)
+
+    def create_robot_tab(self):
+        fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
+        title = tk.Label(self.robot_tab, text="Robot Geometry")
+        title.grid(row=0, column=0, columnspan=2, pady=15)
+
+        for row, (text, key) in enumerate(fields, start=1):
+            label = tk.Label(self.robot_tab, text=text)
+            label.grid(row=row, column=0, pady=5)
+            entry = tk.Entry(self.robot_tab)
+            entry.grid(row=row, column=1, pady=5)
+
+            self.labels.append(label)
+            self.entries[key] = entry
+
+        apply_button_row = len(fields) + 1
+        self.set_button = tk.Button(self.robot_tab, text="Apply", command=self.get_links_lenght)
+        self.set_button.grid(row=apply_button_row, column=0, columnspan=2, pady=15)
+
+    def create_dynamics_tab(self):
+        fields = [("Link 1 mass:", "m1"), ("Link 2 mass:", "m2"), ("Link 3 mass:", "m3"), ("Payload mass:", "payload")]
+        title = tk.Label(self.dynamics_tab, text="Dynamic Parameters")
+        title.grid(row=0, column=0, columnspan=2, pady=15)
+
+        for row, (text, key) in enumerate(fields, start=1):
+            label = tk.Label(self.dynamics_tab, text=text)
+            label.grid(row=row, column=0, pady=5)
+            entry = tk.Entry(self.dynamics_tab)
             entry.grid(row=row, column=1, pady=5)
             self.labels.append(label)
             self.entries[key] = entry
 
-        button_row = len(config_fields) + 1
-        self.set_button = tk.Button(self.config_frame, text="Set lenght", command=self.get_links_lenght)
-        self.set_button.grid(row=button_row, column=0, columnspan=2, pady=15)
-
-        ## Simulation input ##
-        simulation_fields = [("x: ", "x"), ("y: ", "y"), ("Orientation: ", "phi")]
-
-        config_label = tk.Label(self.input_frame, text="New Position")
-        config_label.grid(row=0, column=0, columnspan=2, pady=15)     
-
-        for row, (text, key) in enumerate(simulation_fields, start=1):
-            label = tk.Label(self.input_frame, text=text)
-            label.grid(row=row, column=0, pady=5)
-            entry = tk.Entry(self.input_frame)
-            entry.grid(row=row, column=1, pady=5)
-            self.labels.append(label)
-            self.entries[key] = entry
-
-        button_row = len(config_fields) + 1
-        self.sim_button = tk.Button(self.input_frame, text="Simulate", command=self.get_new_position)
-        self.sim_button.grid(row=4, column=0, columnspan=2, pady=15)
-
-        # Dark Mode Toggle button
-        self.dark_mode_leb = tk.Label(self.config_frame, text="Dark mode:")
-        self.dark_mode_leb.grid(row=5, column=0, pady=15, sticky="e")
-        self.dark_mode_switch = widgets.ToggleSwitch(self.config_frame, width=50, height=25, command=self.on_switch_change)
-        self.dark_mode_switch.grid(row=5, column=1, pady=15, sticky="w")
+    def create_settings_tab(self):
+        title = tk.Label(self.settings_tab, text="Appearance")
+        title.grid(row=0, column=0, columnspan=2, pady=15)
+        self.dark_mode_label = tk.Label(self.settings_tab, text="Dark mode:")
+        self.dark_mode_label.grid(row=1, column=0, pady=10)
+        self.dark_mode_switch = widgets.ToggleSwitch(self.settings_tab, width=50, height=25, command=self.on_switch_change)
+        self.dark_mode_switch.grid(row=1, column=1, pady=10)
 
     def on_switch_change(self, state):
         if state:
