@@ -1,5 +1,6 @@
 import tkinter as tk
 import ui.widgets as widgets
+from math import degrees
 from physics import kinematics as kin
 from ui.robot import robot as rob
 from tkinter import ttk
@@ -48,20 +49,47 @@ class MainWin:
         self.create_settings_tab()
 
     def create_simulation_tab(self):
-        fields = [("X:", "x"), ("Y:", "y"), ("Orientation:", "phi")]
-        title = tk.Label(self.simulation_tab, text="Target Position")
+        self.sim_status_frame = tk.Frame(self.simulation_tab)
+        self.sim_status_frame.pack(side="top", fill="x", padx=20, pady=(10, 20))
+
+        self.status_labels = {}
+
+        status_title = tk.Label(self.sim_status_frame, text="Simulation State")
+        status_title.grid(row=0, column=0, columnspan=2, pady=(0, 10))
+
+        status_fields = [
+            ("Joint 1:", "joint_1"), ("Joint 2:", "joint_2"), ("Joint 3:", "joint_3"), ("End effector:", "end_effector"),
+            ("θ1:", "theta1"), ("θ2:", "theta2"), ("θ3:", "theta3"),
+        ]
+
+        for row, (text, key) in enumerate(status_fields, start=1):
+            label = tk.Label(self.sim_status_frame, text=text)
+            label.grid(row=row, column=0, sticky="e", pady=2)
+
+            value_label = tk.Label(self.sim_status_frame, text="-")
+            value_label.grid(row=row, column=1, sticky="w", padx=5, pady=2)
+
+            self.labels.extend([label, value_label])
+            self.status_labels[key] = value_label
+        self.sim_input_frame = tk.Frame(self.simulation_tab)
+        self.sim_input_frame.pack(side="bottom", fill="x", padx=20, pady=(20, 10))
+
+        title = tk.Label(self.sim_input_frame, text="Target Position")
         title.grid(row=0, column=0, columnspan=2, pady=15)
 
+        fields = [("X:", "x"), ("Y:", "y"), ("Orientation:", "phi")]
+
         for row, (text, key) in enumerate(fields, start=1):
-            label = tk.Label(self.simulation_tab, text=text)
-            label.grid(row=row, column=0, pady=5)
-            entry = tk.Entry(self.simulation_tab)
-            entry.grid(row=row, column=1, pady=5)
+            label = tk.Label(self.sim_input_frame, text=text)
+            label.grid(row=row, column=0, pady=5, sticky="e")
+
+            entry = tk.Entry(self.sim_input_frame)
+            entry.grid(row=row, column=1, pady=5, padx=5)
+
             self.labels.append(label)
             self.entries[key] = entry
-        sim_button_row = len(fields) + 1
-        self.sim_button = tk.Button(self.simulation_tab, text="Simulate", command=self.get_new_position)
-        self.sim_button.grid(row=sim_button_row, column=0, columnspan=2, pady=15)
+        self.sim_button = tk.Button(self.sim_input_frame, text="Simulate", command=self.get_new_position)
+        self.sim_button.grid(row=4, column=0, columnspan=2, pady=15)
 
     def create_robot_tab(self):
         fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
@@ -143,6 +171,15 @@ class MainWin:
         theta1, theta2, theta3 = kin.inv_kinematics(l1, l2, l3, phi, x, y)
         points = kin.calc_joint_positions(l1, l2, l3, theta1, theta2, theta3)
         self.my_robot.set_position(points)
+
+        p0, p1, p2, p3 = points
+        self.status_labels["joint_1"].config(text=f"({p0[0]:.2f}, {p0[1]:.2f})")
+        self.status_labels["joint_2"].config(text=f"({p1[0]:.2f}, {p1[1]:.2f})")
+        self.status_labels["joint_3"].config(text=f"({p2[0]:.2f}, {p2[1]:.2f})")
+        self.status_labels["end_effector"].config(text=f"({p3[0]:.2f}, {p3[1]:.2f})")
+        self.status_labels["theta1"].config(text=f"{degrees(theta1):.2f}°")
+        self.status_labels["theta2"].config(text=f"{degrees(theta2):.2f}°")
+        self.status_labels["theta3"].config(text=f"{degrees(theta3):.2f}°")
 
     def get_links_lenght(self):
         l1 = float(self.entries["l1"].get())
