@@ -5,6 +5,28 @@ from physics import kinematics as kin
 from ui.robot import robot as rob
 from tkinter import ttk
 
+LIGHT_THEME = {
+    "bg_main": "#f0f0f0",
+    "bg_entry": "#ffffff",
+    "canvas_bg": "#fbfbfb",
+    "fg_text": "#202020",
+
+    "grid_color": "#d9d9d9",
+    "axis_color": "#202020",
+    "robot_color": "#0000ff"
+}
+
+DARK_THEME = {
+    "bg_main": "#202020",
+    "bg_entry": "#2b2b2b",
+    "canvas_bg": "#2b2b2b",
+    "fg_text": "#f2f2f2",
+
+    "grid_color": "#bfbfbf",
+    "axis_color": "#ffffff",
+    "robot_color": "#ff991c"
+}
+
 class MainWin:
     def __init__(self, root):
         self.root = root
@@ -14,6 +36,8 @@ class MainWin:
 
         self.entries = {}
         self.labels = []
+
+        self.style = ttk.Style()
 
         self.create_layout()
         self.create_controls()
@@ -127,37 +151,31 @@ class MainWin:
         title.grid(row=0, column=0, columnspan=2, pady=15)
         self.dark_mode_label = tk.Label(self.settings_tab, text="Dark mode:")
         self.dark_mode_label.grid(row=1, column=0, pady=10)
-        self.dark_mode_switch = widgets.ToggleSwitch(self.settings_tab, width=50, height=25, command=self.on_switch_change)
+        self.dark_mode_switch = widgets.ToggleSwitch(self.settings_tab, width=35, height=20, command=self.on_switch_change)
         self.dark_mode_switch.grid(row=1, column=1, pady=10)
 
     def on_switch_change(self, state):
-        if state:
-            bg_main = "#202020"
-            bg_entry = "#2b2b2b"
-            fg_text = "white"
-        else:
-            bg_main = "white"
-            bg_entry = "white"
-            fg_text = "black"
+        theme = DARK_THEME if state else LIGHT_THEME
 
-        frames = [
-            self.root,
-            self.controls,
-            self.config_frame,
-            self.input_frame
-        ]
+        self.apply_theme(self.root, theme)
 
-        for lbl in self.labels:
-            lbl.config(bg=bg_main, fg=fg_text)
-        for entry in self.entries.values():
-            entry.config(bg=bg_entry, fg=fg_text)
-        for frame in frames:
-            frame.config(bg=bg_main)
+        self.canvas.config(bg=theme["canvas_bg"])
+        self.dark_mode_switch.config(bg=theme["bg_main"])
+        self.root.config(bg=theme["bg_main"])
+        self.my_robot.set_theme_colors(theme["grid_color"], theme["axis_color"], theme["robot_color"])
 
-        self.canvas.config(bg=bg_entry)
-        self.sim_button.config(bg=bg_entry, fg=fg_text)
-        self.set_button.config(bg=bg_entry, fg=fg_text)
-        self.dark_mode_switch.config(bg=bg_main)
+    def apply_theme(self, widget, theme):
+        if isinstance(widget, tk.Frame):
+            widget.config(bg=theme["bg_main"])
+        elif isinstance(widget, tk.Label):
+            widget.config(bg=theme["bg_main"], fg=theme["fg_text"])
+        elif isinstance(widget, tk.Entry):
+            widget.config(bg=theme["bg_entry"], fg=theme["fg_text"], insertbackground=theme["fg_text"], selectbackground=theme["robot_color"], selectforeground=theme["bg_entry"])
+        elif isinstance(widget, tk.Button):
+            widget.config(bg=theme["bg_entry"], fg=theme["fg_text"])
+
+        for child in widget.winfo_children():
+            self.apply_theme(child, theme)
 
     def get_new_position(self):
         x = float(self.entries["x"].get())

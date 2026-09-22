@@ -15,6 +15,10 @@ class robot():
         self.home = (width / 2, height - 10 - 15)
         self.scale = 20
 
+        self.grid_color = "#d9d9d9"
+        self.axis_color = "black"
+        self.robot_color = "blue"
+
         self.l1, self.l2, self.l3 = 9, 6, 3
         self.joint_1 = joint(cords=(0, 0), radius=10)
         joint_2_cords = self.calc_initial_joint(self.joint_1.cords, self.l1)
@@ -44,38 +48,45 @@ class robot():
         ## Lines
         x = xh
         while x <= width:
-            self.canvas.create_line(x, 0, x, height, fill="#d9d9d9", tags="grid")
+            self.canvas.create_line(x, 0, x, height, fill=self.grid_color, tags="grid")
             x += step
         x = xh - step
         while x >= 0:
-            self.canvas.create_line(x, 0, x, height, fill="#d9d9d9", tags="grid")
+            self.canvas.create_line(x, 0, x, height, fill=self.grid_color, tags="grid")
             x -= step
         y = yh
         while y >= 0:
-            self.canvas.create_line(0, y, width, y, fill="#d9d9d9", tags="grid")
+            self.canvas.create_line(0, y, width, y, fill=self.grid_color, tags="grid")
             y -= step
         y = yh + step
         while y <= height:
-            self.canvas.create_line(0, y, width, y, fill="#d9d9d9", tags="grid")
+            self.canvas.create_line(0, y, width, y, fill=self.grid_color, tags="grid")
             y += step
         ## END lines
 
         # Axis X
-        self.canvas.create_line(0, yh, width, yh, fill="black", width=2, tags="grid")
+        self.canvas.create_line(0, yh, width, yh, fill=self.axis_color, width=2, tags="grid")
         # Axis Y
-        self.canvas.create_line(xh, 0, xh, height, fill="black", width=2, tags="grid")
+        self.canvas.create_line(xh, 0, xh, height, fill=self.axis_color, width=2, tags="grid")
 
     def draw_joint(self, joint):
         x, y = joint.cords
         cx, cy = self.world_to_canvas(x, y)
         r = joint.radius
-        self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r, fill="blue", tags="robot")
+        self.canvas.create_oval(cx - r, cy - r, cx + r, cy + r, fill=self.robot_color, tags="robot")
 
     def draw_link(self, joint_a, joint_b):
         x1, y1 = self.world_to_canvas(*joint_a.cords)
         x2, y2 = self.world_to_canvas(*joint_b.cords)
 
-        self.canvas.create_line(x1, y1, x2, y2, width=6, fill="blue", tags="robot")
+        self.canvas.create_line(x1, y1, x2, y2, width=6, fill=self.robot_color, tags="robot")
+
+    def set_theme_colors(self, grid_color, axis_color, robot_color):
+        self.grid_color = grid_color
+        self.axis_color = axis_color
+        self.robot_color = robot_color
+
+        self.draw()
 
     def set_link_lengths(self, l1, l2, l3):
         self.l1 = l1
