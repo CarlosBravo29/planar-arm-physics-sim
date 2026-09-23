@@ -18,6 +18,7 @@ class robot():
         self.grid_color = "#d9d9d9"
         self.axis_color = "black"
         self.robot_color = "blue"
+        self.preview_color = "#8a8aff"
 
         self.l1, self.l2, self.l3 = 9, 6, 3
         self.joint_1 = joint(cords=(0, 0), radius=10)
@@ -121,3 +122,19 @@ class robot():
 
     def set_home(self, x, y):
         self.home = (x, y)
+
+    def set_preview_color(self, color):
+        self.preview_color = color
+
+    def draw_preview(self, points):
+        self.canvas.delete("preview")
+
+        for i in range(len(points) - 1):
+            x1, y1 = self.world_to_canvas(*points[i])
+            x2, y2 = self.world_to_canvas(*points[i + 1])
+            self.canvas.create_line(x1, y1, x2, y2, width=6, fill=self.preview_color, tags="preview")
+
+        for point in points:
+            x, y = self.world_to_canvas(*point)
+            r = 7
+            self.canvas.create_oval(x - r, y - r, x + r, y + r, fill=self.preview_color, outline="", tags="preview")
