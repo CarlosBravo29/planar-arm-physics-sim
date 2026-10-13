@@ -26,6 +26,9 @@
   - Robot configuration
   - Dynamics
   - Settings
+- Animated Cartesian `MoveL`-style motion
+- Animated end-effector orientation changes with fixed `(x, y)` position
+- Real-time Simulation State updates during motion
 
 ## Simulation Examples
 
@@ -85,11 +88,30 @@ For the full mathematical derivation, see:
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
+## Current Development
+
+### Recent updates:
+
+- Added animated robot motion using a basic `MoveL`-style cartesian trajectory.
+- The end-effector position is interpolated linearly between the current pose and the target pose.
+- Inverse kinematics is calculated for each trajectory point to generate the corresponding joint configurations.
+- Added animated end-effector orientation changes when the target position `(x, y)` remains unchanged.
+- The Simulation State panel updates joint positions and joint angles during the movement.
+- Elbow-up and elbow-down configurations remain available for preview and target selection.
+
+### Currently working on:
+
+- Improving trajectory continuity between elbow configurations.
+- Adding joint limits.
+- Adding collision detection.
+- Implementing configurable velocity and acceleration profiles.
+- Preparing the foundation for `MoveJ` and `MoveC`.
+
 ## Current Limitations
 
 - Joint limits are not yet implemented.
 - Collision detection is not implemented.
-- `Move` currently applies the selected target configuration without trajectory interpolation or motion animation.
+- `Move` currently uses a basic linear cartesian trajectory without velocity or acceleration profiles.
 - The `Simulate` control is currently a UI placeholder and does not yet perform a dynamic simulation.
 - Velocity and acceleration profiles are not yet implemented.
 - Robot dynamics and joint torque calculations are not yet implemented.
@@ -101,8 +123,8 @@ For the full mathematical derivation, see:
 
 | Category | Progress | Features | Status |
 | :--- | :---: | :--- | :---: |
-| **Core Simulation** | `■■■■■■■□□□` 70% | Forward/inverse kinematics, configurable link lengths, elbow-up/down IK solutions, target preview, and direct pose application.<br>**Pending:** joint limits, trajectory generation, and motion animation. | 🔄 In progress |
+| **Core Simulation** | `■■■■■■■■□□` 80% | Forward/inverse kinematics, configurable link lengths, elbow-up/down IK solutions, target preview, animated MoveL motion, and live pose updates.<br>**Pending:** joint limits, collision detection, and advanced motion control. | 🔄 In progress |
 | **Visualization** | `■■■■■■■■□□` 80% | Tabbed Tkinter GUI, Cartesian grid, light/dark mode, ghost configuration preview, and live joint/end-effector state display.<br>**Pending:** graphical end-effector orientation and additional visualization controls. | 🔄 In progress |
-| **Trajectory Planning** | `■□□□□□□□□□` 10% | UI structure prepared for movement execution.<br>**Pending:** MoveJ, MoveL, MoveC, interpolation, velocity profiles, and trajectory validation. | 🔄 Early development |
+| **Trajectory Planning** | `■■■■□□□□□□` 40% | Basic `MoveL` Cartesian interpolation, animated motion, and orientation-only movement are implemented.<br>**Pending:** MoveJ, MoveC, configurable velocity/acceleration profiles, trajectory validation, and improved continuity handling. | 🔄 Early development |
 | **Advanced Kinematics** | `□□□□□□□□□□` 0% | Jacobian calculation and velocity analysis. | ⏳ Planned |
 | **Dynamics** | `□□□□□□□□□□` 0% | Dynamic simulation, robot dynamics, and joint torque calculation. | ⏳ Planned |

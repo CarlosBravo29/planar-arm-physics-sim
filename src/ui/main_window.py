@@ -2,9 +2,11 @@ import tkinter as tk
 import ui.widgets as widgets
 from math import degrees
 from physics import kinematics as kin
+from physics import trajectory as traj
 #from physics import constraints as cst
 from ui.robot import robot as rob
 from tkinter import ttk
+from animation.arm_animation import ArmAnimation
 
 LIGHT_THEME = {
     "bg_main": "#f0f0f0",
@@ -251,15 +253,35 @@ class MainWin:
         self.preview_points = points
         self.my_robot.draw_preview(points)
 
+    def create_rob(self):
+        self.my_robot = rob(self.canvas)
+        self.my_robot.draw()
+        self.arm_animation = ArmAnimation(self.root, self.my_robot, frame_ms=30)
+
     def move_to_position(self):
         try:
-            angles, points = self.get_target_configuration()
+            start_pose = (self.my_robot.get_current_pose())
+            end_pose = (float(self.entries["x"].get()), float(self.entries["y"].get()), float(self.entries["phi"].get()))
+            motion_type = traj.get_motion_type(start_pose, end_pose)
+
+            if motion_type == "rotate":
+                cartesian_trajectory = (traj.rotate_end_effector(start_pose, end_pose, max_angular_step=1.0))
+            elif motion_type == "move_l":
+                cartesian_trajectory = traj.move_l(start_pose, end_pose, max_step=0.1)
+            else:
+                print("Robot is already at the target pose.")
+                return
+
+            joint_trajectory = traj.calculate_joint_trajectory(cartesian_trajectory, self.my_robot.l1, self.my_robot.l2, self.my_robot.l3, self.elbow_config.get())
+            
         except ValueError as error:
             print(error)
             return
-        self.my_robot.set_position(points)
-        self.update_simulation_state(angles, points)
         self.canvas.delete("preview")
+        self.arm_animation.play(joint_trajectory, on_frame=self.update_simulation_state)
+        # self.my_robot.set_position(points)
+        # self.update_simulation_state(angles, points)
+        # self.canvas.delete("preview")
 
     def simulate_motion(self):
         pass

@@ -1,3 +1,4 @@
+from math import pi, degrees
 
 class joint():
     def __init__(self, cords:tuple[float, float], radius:int = 10):
@@ -14,6 +15,7 @@ class robot():
         self.canvas_dim = (width, height)
         self.home = (width / 2, height - 10 - 15)
         self.scale = 20
+        self.current_angles = (pi / 2, 0.0, 0.0)
 
         self.grid_color = "#d9d9d9"
         self.axis_color = "black"
@@ -46,7 +48,7 @@ class robot():
         xh, yh = self.home
         step = self.scale
         self.canvas.delete("grid")
-        ## Lines
+
         x = xh
         while x <= width:
             self.canvas.create_line(x, 0, x, height, fill=self.grid_color, tags="grid")
@@ -63,8 +65,7 @@ class robot():
         while y <= height:
             self.canvas.create_line(0, y, width, y, fill=self.grid_color, tags="grid")
             y += step
-        ## END lines
-
+        
         # Axis X
         self.canvas.create_line(0, yh, width, yh, fill=self.axis_color, width=2, tags="grid")
         # Axis Y
@@ -99,13 +100,22 @@ class robot():
         self.end_effector.cords = self.calc_initial_joint(self.joint_3.cords, self.l3)
         self.draw()
 
-    def set_position(self, points):
+    def get_current_pose(self):
+        x, y = self.end_effector.cords
+        theta1, theta2, theta3 = self.current_angles
+        phi = degrees(theta1 + theta2 + theta3)
+        return x, y, phi
+
+    def set_position(self, points, angles=None):
         p0, p1, p2, p3 = points
 
         self.joint_1.cords = p0
         self.joint_2.cords = p1
         self.joint_3.cords = p2
         self.end_effector.cords = p3
+
+        if angles is not None:
+            self.current_angles = angles
 
         self.draw()
     
@@ -122,6 +132,13 @@ class robot():
 
     def set_home(self, x, y):
         self.home = (x, y)
+
+    def get_current_pose(self):
+        x, y = self.end_effector.cords
+        theta1, theta2, theta3 = self.current_angles
+        phi = degrees(theta1 + theta2 + theta3)
+
+        return x, y, phi
 
     def set_preview_color(self, color):
         self.preview_color = color
