@@ -1,4 +1,5 @@
-from math import pi, degrees
+import tkinter as tk
+from math import pi, degrees, cos, sin
 
 class joint():
     def __init__(self, cords:tuple[float, float], radius:int = 10):
@@ -83,6 +84,24 @@ class robot():
 
         self.canvas.create_line(x1, y1, x2, y2, width=6, fill=self.robot_color, tags="robot")
 
+    def draw_end_effector_frame(self):
+        x, y = self.end_effector.cords
+        cx, cy = self.world_to_canvas(x, y)
+        theta1, theta2, theta3 = self.current_angles
+        phi = theta1 + theta2 + theta3
+        axis_length = 40
+
+        # Local X axis
+        x_axis_end_x = cx + axis_length * cos(phi)
+        x_axis_end_y = cy - axis_length * sin(phi)
+
+        # Local Y axis = phi + 90°
+        y_axis_end_x = cx + axis_length * cos(phi + pi / 2)
+        y_axis_end_y = cy - axis_length * sin(phi + pi / 2)
+
+        self.canvas.create_line(cx, cy, x_axis_end_x, x_axis_end_y, fill="blue", width=3, arrow=tk.LAST, tags="robot")
+        self.canvas.create_line(cx, cy, y_axis_end_x, y_axis_end_y, fill="red", width=3, arrow=tk.LAST, tags="robot")
+
     def set_theme_colors(self, grid_color, axis_color, robot_color):
         self.grid_color = grid_color
         self.axis_color = axis_color
@@ -129,6 +148,7 @@ class robot():
         self.draw_joint(self.joint_2)
         self.draw_joint(self.joint_3)
         self.draw_joint(self.end_effector)
+        self.draw_end_effector_frame()
 
     def set_home(self, x, y):
         self.home = (x, y)
