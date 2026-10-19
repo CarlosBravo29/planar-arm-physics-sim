@@ -7,6 +7,7 @@ from physics import trajectory as traj
 from ui.robot import robot as rob
 from tkinter import ttk
 from animation.arm_animation import ArmAnimation
+from compiler.compiler import (compile_code, CompilerError)
 
 LIGHT_THEME = {
     "bg_main": "#f0f0f0",
@@ -65,17 +66,20 @@ class MainWin:
         self.notebook = ttk.Notebook(self.controls, width=400, height=550)
 
         self.simulation_tab = tk.Frame(self.notebook)
+        self.program_tab = tk.Frame(self.notebook)
         self.robot_tab = tk.Frame(self.notebook)
         self.dynamics_tab = tk.Frame(self.notebook)
         self.settings_tab = tk.Frame(self.notebook)
 
         self.notebook.add(self.simulation_tab, text="Simulation")
+        self.notebook.add(self.program_tab, text="Program")
         self.notebook.add(self.robot_tab, text="Robot")
         self.notebook.add(self.dynamics_tab, text="Dynamics")
         self.notebook.add(self.settings_tab, text="Settings")
         self.notebook.pack(fill="both", expand=True)
 
         self.create_simulation_tab()
+        self.create_program_tab()
         self.create_robot_tab()
         self.create_dynamics_tab()
         self.create_settings_tab()
@@ -135,6 +139,16 @@ class MainWin:
         self.move_button.grid(row=6, column=1, pady=15, padx=5)
         self.sim_button = tk.Button(self.sim_input_frame, text="Simulate", command=self.simulate_motion)
         self.sim_button.grid(row=6, column=2, columnspan=2, pady=15)
+
+    def create_program_tab(self):
+        title = tk.Label(self.program_tab, text="Motion Program")
+        title.pack(pady=(15, 5))
+        self.program_text = tk.Text(self.program_tab, width=40, height=20)
+        self.program_text.pack(padx=15, pady=10, fill="both", expand=True)
+        self.monitor = tk.Label(self.program_tab, width=40, height=5)
+        self.monitor.pack(padx=15, pady=10, fill="both", expand=True)
+        self.run_button = tk.Button(self.program_tab, text="Compile", command=self.run_program)
+        self.run_button.pack(pady=(5, 15))
 
     def create_robot_tab(self):
         fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
@@ -257,6 +271,19 @@ class MainWin:
         self.my_robot = rob(self.canvas)
         self.my_robot.draw()
         self.arm_animation = ArmAnimation(self.root, self.my_robot, frame_ms=30)
+
+    def run_program(self):
+        code = self.program_text.get("1.0", "end-1c")
+        try:
+            ast = compile_code(code)
+            self.monitor.config(text="Successful compilation", fg="green")
+            print(ast)
+        except SyntaxError as error:
+            self.monitor.config(text=f"Lexical error:\n{error}", fg="red")
+        except CompilerError as error:
+            self.monitor.config(text=f"Syntax error:\n{error.message}", fg="red")
+        except Exception as error:
+            self.monitor.config(text=f"Unexpected error:\n{error}", fg="red")
 
     def move_to_position(self):
         try:
