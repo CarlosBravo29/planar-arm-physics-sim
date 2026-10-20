@@ -8,6 +8,7 @@ from ui.robot import robot as rob
 from tkinter import ttk
 from animation.arm_animation import ArmAnimation
 from compiler.compiler import (compile_code, CompilerError)
+from compiler.executor import ProgramExecutor
 
 LIGHT_THEME = {
     "bg_main": "#f0f0f0",
@@ -47,6 +48,8 @@ class MainWin:
         self.preview_points = None
 
         self.style = ttk.Style()
+
+        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, set_callback=self.execute_set, finish_callback=self.on_program_finished)
 
         self.create_layout()
         self.create_controls()
@@ -143,12 +146,18 @@ class MainWin:
     def create_program_tab(self):
         title = tk.Label(self.program_tab, text="Motion Program")
         title.pack(pady=(15, 5))
-        self.program_text = tk.Text(self.program_tab, width=40, height=20)
+        editor_frame = tk.Frame(self.program_tab)
+        editor_frame.pack(padx=15, pady=(5, 10), fill="both", expand=True)
+        self.program_text = tk.Text(editor_frame, width=40, height=18)
         self.program_text.pack(padx=15, pady=10, fill="both", expand=True)
-        self.monitor = tk.Label(self.program_tab, width=40, height=5)
-        self.monitor.pack(padx=15, pady=10, fill="both", expand=True)
-        self.run_button = tk.Button(self.program_tab, text="Compile", command=self.run_program)
-        self.run_button.pack(pady=(5, 15))
+        self.monitor = tk.Label(editor_frame, text="Ready", width=40, height=3, anchor="w", justify="left")
+        self.monitor.pack(padx=15, pady=(0, 10), fill="x")
+        button_frame = tk.Frame(self.program_tab)
+        button_frame.pack(pady=(0, 15))
+        self.compile_button = tk.Button(button_frame, text="Compile", command=self.compile_program, width=12)
+        self.compile_button.pack(side="left", padx=5)
+        self.run_program_button = tk.Button(button_frame, text="Run Program", command=self.run_program, width=12)
+        self.run_program_button.pack(side="left", padx=5)
 
     def create_robot_tab(self):
         fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
@@ -272,7 +281,7 @@ class MainWin:
         self.my_robot.draw()
         self.arm_animation = ArmAnimation(self.root, self.my_robot, frame_ms=30)
 
-    def run_program(self):
+    def compile_program(self):
         code = self.program_text.get("1.0", "end-1c")
         try:
             ast = compile_code(code)
@@ -285,12 +294,53 @@ class MainWin:
         except Exception as error:
             self.monitor.config(text=f"Unexpected error:\n{error}", fg="red")
 
+    def run_program(self):
+        code = self.program_text.get("1.0", "end-1c")
+        try:
+            ast = compile_code(code)
+            self.monitor.config(text="Compilation successful. Running program...", fg="blue")
+            self.program_executor.run(ast)
+        except SyntaxError as error:
+            self.monitor.config(text=f"Lexical error:\n{error}", fg="red")
+        except CompilerError as error:
+            self.monitor.config(text=f"Syntax error:\n{error.message}", fg="red")
+        except Exception as error:
+            self.monitor.config(text=f"Execution error:\n{error}", fg="red")
+
+    def execute_move_l(self, instruction, on_finish):
+        x, y, phi = instruction["coords"]
+        speed = instruction["speed"]
+        start_pose = self.my_robot.get_current_pose()
+        end_pose = (x, y, phi)
+        motion_type = traj.get_motion_type(start_pose, end_pose)
+
+        if motion_type == "rotate":
+            cartesian_trajectory = (traj.rotate_end_effector(start_pose, end_pose, max_angular_step=1.0))
+        elif motion_type == "move_l":
+            cartesian_trajectory = traj.move_l(start_pose, end_pose, max_step=0.1)
+        else:
+            on_finish()
+            return
+
+        joint_trajectory = (traj.calculate_joint_trajectory(cartesian_trajectory, self.my_robot.l1, self.my_robot.l2, self.my_robot.l3, self.elbow_config.get()))
+        self.canvas.delete("preview")
+        self.arm_animation.play(joint_trajectory, on_frame=self.update_simulation_state, on_finish=on_finish)
+
+    def execute_set(self, instruction):
+        state = instruction["value"]
+        if state:
+            self.elbow_config.set("up")
+        else:
+            self.elbow_config.set("down")
+
+    def on_program_finished(self):
+        self.monitor.config(text="Program completed successfully", fg="green")
+
     def move_to_position(self):
         try:
             start_pose = (self.my_robot.get_current_pose())
             end_pose = (float(self.entries["x"].get()), float(self.entries["y"].get()), float(self.entries["phi"].get()))
             motion_type = traj.get_motion_type(start_pose, end_pose)
-
             if motion_type == "rotate":
                 cartesian_trajectory = (traj.rotate_end_effector(start_pose, end_pose, max_angular_step=1.0))
             elif motion_type == "move_l":
@@ -298,9 +348,7 @@ class MainWin:
             else:
                 print("Robot is already at the target pose.")
                 return
-
-            joint_trajectory = traj.calculate_joint_trajectory(cartesian_trajectory, self.my_robot.l1, self.my_robot.l2, self.my_robot.l3, self.elbow_config.get())
-            
+            joint_trajectory = traj.calculate_joint_trajectory(cartesian_trajectory, self.my_robot.l1, self.my_robot.l2, self.my_robot.l3, self.elbow_config.get())   
         except ValueError as error:
             print(error)
             return

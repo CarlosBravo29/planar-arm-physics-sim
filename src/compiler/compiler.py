@@ -89,16 +89,3 @@ def compile_code(code):
     tokens = lexer(code)
     parser = Parser(tokens)
     return parser.compile()
-
-my_code = """
-START
-MoveL (50, 20, 4), 3;
-SET True;
-END
-"""
-tokens = lexer(my_code)
-parser = Parser(tokens)
-ast = parser.compile()
-
-print("AST generado con éxito:")
-print(ast)
