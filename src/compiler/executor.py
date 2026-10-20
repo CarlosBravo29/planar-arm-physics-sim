@@ -1,8 +1,9 @@
 
 class ProgramExecutor:
-    def __init__(self, move_callback, set_callback, finish_callback=None):
+    def __init__(self, move_callback, set_callback, wait_callback, finish_callback=None):
         self.move_callback = move_callback
         self.set_callback = set_callback
+        self.wait_callback = wait_callback
         self.finish_callback = finish_callback
 
         self.instructions = []
@@ -30,6 +31,8 @@ class ProgramExecutor:
         action = instruction["action"]
         if action == "MoveL":
             self.move_callback(instruction, self._instruction_finished)
+        elif action == "WaitTime":
+            self.wait_callback(instruction, self._instruction_finished)
         elif action == "SET":
             self.set_callback(instruction)
             self._instruction_finished()

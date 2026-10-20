@@ -49,7 +49,7 @@ class MainWin:
 
         self.style = ttk.Style()
 
-        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, set_callback=self.execute_set, finish_callback=self.on_program_finished)
+        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, set_callback=self.execute_set, wait_callback=self.execute_wait_time, finish_callback=self.on_program_finished)
 
         self.create_layout()
         self.create_controls()
@@ -304,6 +304,8 @@ class MainWin:
             self.monitor.config(text=f"Lexical error:\n{error}", fg="red")
         except CompilerError as error:
             self.monitor.config(text=f"Syntax error:\n{error.message}", fg="red")
+        except ValueError as error:
+            self.monitor.config(text=f"Value error:\n{error}", fg="red")
         except Exception as error:
             self.monitor.config(text=f"Execution error:\n{error}", fg="red")
 
@@ -332,6 +334,11 @@ class MainWin:
             self.elbow_config.set("up")
         else:
             self.elbow_config.set("down")
+
+    def execute_wait_time(self, instruction, on_finish):
+        duration = instruction["duration"]
+        milliseconds = int(duration * 1000)
+        self.root.after(milliseconds, on_finish)
 
     def on_program_finished(self):
         self.monitor.config(text="Program completed successfully", fg="green")

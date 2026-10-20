@@ -3,7 +3,7 @@ import re
 TOKEN_TYPES = [
     ('START', r'START\b'),
     ('END', r'END\b'),
-    ('ACTION', r'MoveL\b|SET\b'),
+    ('ACTION', r'MoveL\b|SET\b|WaitTime\b'),
     ('BOOLEAN', r'True\b|False\b'),
     ('COORDS', r'\(\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*\)'),
     ('NUMBER', r'[-+]?\d*\.?\d+'),
@@ -79,6 +79,11 @@ class Parser:
         elif action == 'SET':
             state = self.consume('BOOLEAN')
             node = {'action': action, 'value': state}
+        elif action == 'WaitTime':
+            duration = self.consume('NUMBER')
+            if duration < 0:
+                raise ValueError(f"WaitTime cannot be negative: {duration}")
+            node = {'action': action, 'duration': duration}
         else:
             self.error(f"Unknown action '{action}'")
         self.consume('DELIMITER')
