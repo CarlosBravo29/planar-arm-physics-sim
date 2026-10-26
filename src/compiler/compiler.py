@@ -3,7 +3,7 @@ import re
 TOKEN_TYPES = [
     ('START', r'START\b'),
     ('END', r'END\b'),
-    ('ACTION', r'MoveL\b|SET\b|WaitTime\b'),
+    ('ACTION', r'MoveL\b|MoveC\b|SET\b|WaitTime\b'),
     ('BOOLEAN', r'True\b|False\b'),
     ('COORDS', r'\(\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*,\s*[-+]?\d*\.?\d+\s*\)'),
     ('NUMBER', r'[-+]?\d*\.?\d+'),
@@ -76,6 +76,13 @@ class Parser:
             self.consume('SEPARATOR')
             speed = self.consume('NUMBER')
             node = {'action': action, 'coords': coords, 'speed': speed}
+        elif action == 'MoveC':
+            via_pose = self.consume('COORDS')
+            self.consume('SEPARATOR')
+            end_pose = self.consume('COORDS')
+            self.consume('SEPARATOR')
+            speed = self.consume('NUMBER')
+            node = {'action': action, 'via': via_pose, 'target': end_pose, 'speed': speed}
         elif action == 'SET':
             state = self.consume('BOOLEAN')
             node = {'action': action, 'value': state}

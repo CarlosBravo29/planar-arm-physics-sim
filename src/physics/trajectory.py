@@ -1,5 +1,5 @@
 from . import kinematics as kin
-from math import ceil, sqrt
+from math import (ceil, sqrt, atan2, cos, sin, pi)
 
 def rotate_orientation(start_pose, end_pose, max_angular_step=1.0):
     x0, y0, phi0 = start_pose
@@ -33,6 +33,61 @@ def move_l(start_pose, end_pose, max_step=0.1):
 
     return trajectory
 
+def move_c(start_pose, via_pose, end_pose, max_step=0.1):
+    x0, y0, phi0 = start_pose
+    xm, ym, phim = via_pose
+    xf, yf, phif = end_pose
+
+    cx, cy = calculate_circle_center((x0, y0), (xm, ym), (xf, yf))
+    radius = sqrt((x0 - cx)**2 + (y0 - cy)**2)
+    start_angle = atan2(y0 - cy, x0 - cx)
+    via_angle = atan2(ym - cy, xm - cx)
+    end_angle = atan2(yf - cy, xf - cx)
+    start_to_via_ccw = normalize_angle_positive(via_angle - start_angle)
+    start_to_end_ccw = normalize_angle_positive(end_angle - start_angle)
+
+    if start_to_via_ccw <= start_to_end_ccw:
+        # Counterclockwise
+        total_angle = start_to_end_ccw
+        via_delta = start_to_via_ccw
+    else:
+        # Clockwise
+        total_angle = -normalize_angle_positive(start_angle - end_angle)
+        via_delta = -normalize_angle_positive(start_angle - via_angle)
+        
+    arc_length = abs(radius * total_angle)
+    steps = max(1, ceil(arc_length / max_step))
+
+    if abs(total_angle) > 1e-9:
+        via_progress = abs(via_delta / total_angle)
+    else:
+        via_progress = 0.5
+        
+    trajectory = []
+
+    for i in range(steps + 1):
+        s = i / steps
+        angle = (start_angle + s * total_angle)
+        x = cx + radius * cos(angle)
+        y = cy + radius * sin(angle)
+        if s <= via_progress:
+            if via_progress > 1e-9:
+                local_s = s / via_progress
+            else:
+                local_s = 1.0
+            delta_phi = shortest_angle_delta(phi0, phim)
+            phi = (phi0 + local_s * delta_phi)
+        else:
+            remaining = 1.0 - via_progress
+            if remaining > 1e-9:
+                local_s = ((s - via_progress) / remaining)
+            else:
+                local_s = 1.0
+            delta_phi = shortest_angle_delta(phim, phif)
+            phi = (phim + local_s * delta_phi)
+        trajectory.append((x, y, phi))
+    return trajectory
+
 def calculate_joint_trajectory(cartesian_trajectory, l1, l2, l3, elbow):
     joint_trajectory = []
 
@@ -43,9 +98,20 @@ def calculate_joint_trajectory(cartesian_trajectory, l1, l2, l3, elbow):
 
     return joint_trajectory
 
+def calculate_circle_center(p1, p2, p3, tolerance=1e-9):
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
 
-from math import ceil, sqrt
+    d = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
+    if abs(d) < tolerance:
+        raise ValueError("MoveC points are collinear. " "A circular trajectory cannot be calculated.")
+    cx = ((x1**2 + y1**2) * (y2 - y3) + (x2**2 + y2**2) * (y3 - y1) + (x3**2 + y3**2) * (y1 - y2)) / d
+    cy = ((x1**2 + y1**2) * (x3 - x2) + (x2**2 + y2**2) * (x1 - x3) + (x3**2 + y3**2) * (x2 - x1)) / d
+    return cx, cy
 
+def normalize_angle_positive(angle):
+    return angle % (2 * pi)
 
 def shortest_angle_delta(start_angle, end_angle):
     return ((end_angle - start_angle + 180) % 360 - 180)

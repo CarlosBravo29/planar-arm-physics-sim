@@ -43,13 +43,12 @@ class MainWin:
 
         self.entries = {}
         self.labels = []
-
         self.elbow_config = tk.StringVar(value="up")
         self.preview_points = None
 
         self.style = ttk.Style()
 
-        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, set_callback=self.execute_set, wait_callback=self.execute_wait_time, finish_callback=self.on_program_finished)
+        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, move_c_callback=self.execute_move_c, set_callback=self.execute_set, wait_callback=self.execute_wait_time, finish_callback=self.on_program_finished)
 
         self.create_layout()
         self.create_controls()
@@ -328,6 +327,17 @@ class MainWin:
         self.canvas.delete("preview")
         self.arm_animation.play(joint_trajectory, on_frame=self.update_simulation_state, on_finish=on_finish)
 
+    def execute_move_c(self, instruction, on_finish):
+        via_pose = instruction["via"]
+        end_pose = instruction["target"]
+        speed = instruction["speed"]
+
+        start_pose = self.my_robot.get_current_pose()
+        cartesian_trajectory = traj.move_c(start_pose, via_pose, end_pose, max_step=0.1)
+        joint_trajectory = (traj.calculate_joint_trajectory(cartesian_trajectory, self.my_robot.l1, self.my_robot.l2, self.my_robot.l3, self.elbow_config.get()))
+        self.canvas.delete("preview")
+        self.arm_animation.play(joint_trajectory, on_frame=self.update_simulation_state, on_finish=on_finish)
+    
     def execute_set(self, instruction):
         state = instruction["value"]
         if state:
