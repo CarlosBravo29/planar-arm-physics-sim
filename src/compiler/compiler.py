@@ -9,6 +9,7 @@ TOKEN_TYPES = [
     ('NUMBER', r'[-+]?\d*\.?\d+'),
     ('SEPARATOR', r','),
     ('DELIMITER', r';'),
+    ('COMMENT', r'\!.*'),
     ('SKIP', r'[ \t\n]+'),
     ('MISMATCH', r'.')
 ]
@@ -19,7 +20,7 @@ def lexer(main_code):
     for match_object in re.finditer(regex, main_code):
         kind = match_object.lastgroup
         value = match_object.group()
-        if kind == 'SKIP':
+        if kind in ('SKIP', 'COMMENT'):
             continue
         elif kind == 'MISMATCH':
             raise SyntaxError(f'Unknown character {value}')

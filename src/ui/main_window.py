@@ -154,10 +154,14 @@ class MainWin:
         title.pack(pady=(15, 5))
         editor_frame = tk.Frame(self.program_tab)
         editor_frame.pack(padx=15, pady=(5, 10), fill="both", expand=True)
+        
         self.program_text = tk.Text(editor_frame, width=40, height=18)
         self.program_text.pack(padx=15, pady=10, fill="both", expand=True)
+        self.program_text.insert("1.0","START\n\nEND")
+        self.program_text.mark_set("insert", "2.0")
         self.monitor = tk.Label(editor_frame, text="Ready", width=40, height=3, anchor="w", justify="left")
         self.monitor.pack(padx=15, pady=(0, 10), fill="x")
+        
         button_frame = tk.Frame(self.program_tab)
         button_frame.pack(pady=(0, 15))
         self.compile_button = tk.Button(button_frame, text="Compile", command=self.compile_program, width=12)
