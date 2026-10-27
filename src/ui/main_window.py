@@ -48,7 +48,14 @@ class MainWin:
 
         self.style = ttk.Style()
 
-        self.program_executor = ProgramExecutor(move_callback=self.execute_move_l, move_c_callback=self.execute_move_c, set_callback=self.execute_set, wait_callback=self.execute_wait_time, finish_callback=self.on_program_finished)
+        self.program_executor = ProgramExecutor(
+            move_callback=self.execute_move_l, 
+            move_c_callback=self.execute_move_c, 
+            set_callback=self.execute_set, 
+            wait_callback=self.execute_wait_time,
+            instruction_callback=self.on_instruction_start, 
+            finish_callback=self.on_program_finished
+        )
 
         self.create_layout()
         self.create_controls()
@@ -157,6 +164,7 @@ class MainWin:
         self.compile_button.pack(side="left", padx=5)
         self.run_program_button = tk.Button(button_frame, text="Run Program", command=self.run_program, width=12)
         self.run_program_button.pack(side="left", padx=5)
+        self.program_text.tag_configure("executing_line", background="yellow")
 
     def create_robot_tab(self):
         fields = [("L1: ", "l1"), ("L2: ", "l2"), ("L3: ", "l3")]
@@ -293,10 +301,23 @@ class MainWin:
         except Exception as error:
             self.monitor.config(text=f"Unexpected error:\n{error}", fg="red")
 
+    def get_program_instruction_lines(self):
+        code = self.program_text.get("1.0", "end-1c")
+        instruction_lines = []
+        actions = ("MoveL", "MoveC", "WaitTime", "SET")
+
+        for line_number, line in enumerate(code.splitlines(), start=1):
+            stripped_line = line.strip()
+            if stripped_line.startswith(actions):
+                instruction_lines.append(line_number)
+
+        return instruction_lines
+
     def run_program(self):
         code = self.program_text.get("1.0", "end-1c")
         try:
             ast = compile_code(code)
+            self.program_instruction_lines = (self.get_program_instruction_lines())
             self.monitor.config(text="Compilation successful. Running program...", fg="blue")
             self.program_executor.run(ast)
         except SyntaxError as error:
@@ -350,7 +371,13 @@ class MainWin:
         milliseconds = int(duration * 1000)
         self.root.after(milliseconds, on_finish)
 
+    def on_instruction_start(self, instruction_index):
+        if (instruction_index < len(self.program_instruction_lines)):
+            line_number = (self.program_instruction_lines[instruction_index])
+            self.highlight_program_line(line_number)
+
     def on_program_finished(self):
+        self.program_text.tag_remove("executing_line", "1.0", "end")
         self.monitor.config(text="Program completed successfully", fg="green")
 
     def move_to_position(self):
@@ -371,9 +398,14 @@ class MainWin:
             return
         self.canvas.delete("preview")
         self.arm_animation.play(joint_trajectory, on_frame=self.update_simulation_state)
-        # self.my_robot.set_position(points)
-        # self.update_simulation_state(angles, points)
-        # self.canvas.delete("preview")
+
+    def highlight_program_line(self, line_number):
+        self.program_text.tag_remove("executing_line", "1.0","end")
+        start = f"{line_number}.0"
+        end = f"{line_number}.end"
+        self.program_text.tag_add("executing_line", start, end)
+
+        self.program_text.see(start)
 
     def simulate_motion(self):
         pass

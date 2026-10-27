@@ -1,11 +1,13 @@
 
 class ProgramExecutor:
-    def __init__(self, move_callback, move_c_callback, set_callback, wait_callback, finish_callback=None):
+    def __init__(self, move_callback, move_c_callback, set_callback, wait_callback, instruction_callback=None, finish_callback=None):
         self.move_callback = move_callback
         self.move_c_callback = move_c_callback
         self.set_callback = set_callback
         self.wait_callback = wait_callback
+        self.instruction_callback = instruction_callback
         self.finish_callback = finish_callback
+        
         self.instructions = []
         self.current_instruction = 0
         self.running = False
@@ -28,6 +30,8 @@ class ProgramExecutor:
                 self.finish_callback()
             return
         instruction = self.instructions[self.current_instruction]
+        if self.instruction_callback:
+            self.instruction_callback(self.current_instruction)
         action = instruction["action"]
         if action == "MoveL":
             self.move_callback(instruction, self._instruction_finished)
