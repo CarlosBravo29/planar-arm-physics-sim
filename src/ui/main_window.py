@@ -159,6 +159,9 @@ class MainWin:
         self.program_text.pack(padx=15, pady=10, fill="both", expand=True)
         self.program_text.insert("1.0","START\n\nEND")
         self.program_text.mark_set("insert", "2.0")
+        self.program_text.bind("<KeyPress>", self.on_program_keypress)
+        self.program_text.tag_configure("comment", foreground="green")
+        self.program_text.bind("<KeyRelease>", self.highlight_comments)
         self.monitor = tk.Label(editor_frame, text="Ready", width=40, height=3, anchor="w", justify="left")
         self.monitor.pack(padx=15, pady=(0, 10), fill="x")
         
@@ -220,6 +223,22 @@ class MainWin:
         self.my_robot.set_theme_colors(theme["grid_color"], theme["axis_color"], theme["robot_color"])
         self.my_robot.set_preview_color(theme["preview_color"])
 
+    def on_program_keypress(self, event):
+        pairs = {"(": ")", "[": "]", "{": "}", '"': '"', "'": "'"}
+        closing_chars = pairs.values()
+
+        if event.char in pairs:
+            closing = pairs[event.char]
+            self.program_text.insert("insert", event.char + closing)
+            self.program_text.mark_set("insert", "insert-1c")
+            return "break"
+
+        if event.char in closing_chars:
+            next_char = self.program_text.get("insert", "insert+1c")
+            if next_char == event.char:
+                self.program_text.mark_set("insert", "insert+1c")
+                return "break"
+    
     def apply_theme(self, widget, theme):
         if isinstance(widget, tk.Frame):
             widget.config(bg=theme["bg_main"])
@@ -234,6 +253,17 @@ class MainWin:
 
         for child in widget.winfo_children():
             self.apply_theme(child, theme)
+
+    def highlight_comments(self, event=None):
+        self.program_text.tag_remove("comment", "1.0", "end")
+        code = self.program_text.get("1.0", "end-1c")
+
+        for line_number, line in enumerate(code.splitlines(), start=1):
+            comment_position = line.find("!")
+            if comment_position != -1:
+                start = f"{line_number}.{comment_position}"
+                end = f"{line_number}.end"
+                self.program_text.tag_add("comment", start, end)
 
     def get_target_configuration(self): #get_target_configuration get_new_position
         x = float(self.entries["x"].get())
